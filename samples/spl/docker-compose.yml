@@ -1,0 +1,22 @@
+services:
+  splunk:
+    image: splunk/splunk:latest
+    platform: linux/amd64
+    container_name: splunk-local
+    hostname: splunk-local
+    ports:
+      - "8000:8000"
+      - "8089:8089"
+    environment:
+      SPLUNK_PASSWORD: MyPassword123!
+      SPLUNK_START_ARGS: --accept-license
+      SPLUNK_GENERAL_TERMS: --accept-sgt-current-at-splunk-com
+    volumes:
+      - splunk-var:/opt/splunk/var
+      - splunk-etc:/opt/splunk/etc
+    tty: true
+    stdin_open: true
+
+volumes:
+  splunk-var:
+  splunk-etc:
