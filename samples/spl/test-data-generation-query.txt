@@ -1,0 +1,34 @@
+| makeresults count=1000
+| eval serviceName="payments-service"
+| eval endpoints="/v1/ach/debit,/v1/ach/credit,/v1/ach/status,/v1/ach/verify-account,/v1/ach/settlement,/v1/ach/return"
+| eval endpointName=mvindex(split(endpoints,","), random() % 6)
+| eval eventTypes="INFO,ERROR,EXIT"
+| eval event=mvindex(split(eventTypes,","), random() % 3)
+| eval startTime = now() - (random() % 604800)
+| eval responseTime = 40 + (random() % 1200)
+| eval endTime = startTime + (responseTime/1000)
+| eval raw = md5(tostring(random()) . tostring(now()) . "x")
+| eval unique_id = substr(raw,1,8) . "-" . substr(raw,9,4) . "-" . substr(raw,13,4) . "-" . substr(raw,17,4) . "-" . substr(raw,21,12)
+| eval routingNumbers="021000021,111000025,091000022,026009593,122105155"
+| eval routingNumber=mvindex(split(routingNumbers,","), random() % 5)
+| eval accountLast4 = tostring(1000 + (random() % 9000))
+| eval amount = 500 + (random() % 50000)
+| eval currency="USD"
+| eval request = case(
+    match(endpointName,"debit"), "{\"type\":\"debit\",\"amount\":" . amount . ",\"currency\":\"USD\",\"accountLast4\":\"" . accountLast4 . "\",\"routingNumber\":\"" . routingNumber . "\"}",
+    match(endpointName,"credit"), "{\"type\":\"credit\",\"amount\":" . amount . ",\"currency\":\"USD\",\"destinationAccountLast4\":\"" . accountLast4 . "\",\"routingNumber\":\"" . routingNumber . "\"}",
+    match(endpointName,"status"), "{\"transferId\":\"ACH-" . (100000 + random() % 900000) . "\",\"action\":\"status\"}",
+    match(endpointName,"verify-account"), "{\"accountLast4\":\"" . accountLast4 . "\",\"routingNumber\":\"" . routingNumber . "\"}",
+    match(endpointName,"settlement"), "{\"transferId\":\"ACH-" . (100000 + random() % 900000) . "\",\"action\":\"settlement\"}",
+    match(endpointName,"return"), "{\"transferId\":\"ACH-" . (100000 + random() % 900000) . "\",\"action\":\"return\"}"
+)
+| eval returnCodes="R01,R02,R03,R04,R07,R08,R10,R29"
+| eval returnCode=mvindex(split(returnCodes,","), random() % 8)
+| eval response = case(
+    event="INFO" AND match(endpointName,"debit|credit"), "{\"status\":\"pending\",\"achStatus\":\"submitted\",\"estimatedSettlementDate\":\"" . strftime(startTime + 86400, "%Y-%m-%d") . "\"}",
+    event="INFO" AND match(endpointName,"status"), "{\"status\":\"settled\",\"achStatus\":\"completed\",\"settledAt\":\"" . strftime(startTime, "%Y-%m-%dT%H:%M:%SZ") . "\"}",
+    event="ERROR", "{\"status\":\"returned\",\"achStatus\":\"returned\",\"returnCode\":\"" . returnCode . "\",\"reason\":\"bank_return\"}",
+    event="EXIT", "{\"status\":\"error\",\"errorCode\":\"ACH-504\",\"message\":\"gateway_timeout\"}",
+    true(), "{\"status\":\"unknown\"}"
+)
+| eval _time=startTime
