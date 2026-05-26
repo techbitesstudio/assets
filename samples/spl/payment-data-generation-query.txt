@@ -1,0 +1,20 @@
+| makeresults count=500
+| eval cardTypes="VISA,MASTERCARD"
+| eval cardType=mvindex(split(cardTypes,","), random() % 2)
+
+| eval expiryDates="01/27,02/27,03/27,04/27,05/27,06/27,07/27,08/27,09/27,10/27,11/27,12/27"
+| eval expiryDate=mvindex(split(expiryDates,","), random() % 12)
+
+| eval startTime = now() - (random() % 604800)
+| eval responseTime = 50 + (random() % 1500)
+| eval endTime = startTime + (responseTime/1000)
+
+| eval eventTypes="INFO,ERROR,EXIT"
+| eval event=mvindex(split(eventTypes,","), random() % 3)
+
+| eval uuidList="d24481dd-66b0-1408-8e57-e95689202eb9,ece1a9ae-ffd4-aa16-ba60-f4aaf994a432,f6669f7b-58ec-429f-30e4-b854d25735fa,6f77c1f5-b663-996c-c336-72c1d5493d4b,fb061221-316e-c954-1422-57bb4f6b9a46,a0bcc770-67eb-ddb1-2e42-b9b81a701feb,1933364a-bd6f-e0c0-752b-7c7f863d1df1,3f87d147-04c5-93fc-37f6-6343c972be35,6df3b9f5-dec6-d891-7ee6-e22e1cf34fad,fd40db72-259e-a2c9-ccee-db7522824e5b,e1982368-275b-97fc-4174-151084428a94,273e849a-dc05-a8c3-0281-c8a2e827318d,5cd8d703-abee-3948-b6a3-3b7f3232a166,bd155994-0316-6a21-8dae-5d670006ab46,2ff3093c-53e8-9814-d2a8-c58f6c866dbb"
+
+| eval uuidArray=split(uuidList,",")
+| eval uuid=mvindex(uuidArray, random() % mvcount(uuidArray))
+
+| eval _time=startTime
