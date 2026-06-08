@@ -30,7 +30,7 @@
         </search>
       </table>
     </panel>
-    <!-- Table: Timeline by Event Type -->
+    <!-- Chart: Timeline by Event Type -->
     <panel>
       <title>Timeline by Event Type</title>
       <chart>
@@ -49,6 +49,7 @@
     </panel>
   </row>
   <row>
+    <!-- Chart: Timeline by Latency -->
     <panel>
       <title>Timeline by Latency</title>
       <chart>
