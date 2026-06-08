@@ -1,0 +1,69 @@
+<dashboard version="1.1" theme="light">
+<label>First Splunk Dashboard</label>
+<fieldset submitButton="true" autoRun="true">
+  <input type="time" token="time" searchWhenChanged="true">
+    <label>Time</label>
+    <default>
+      <earliest>-1d@d</earliest>
+      <latest>now</latest>
+    </default>
+  </input>
+  </fieldset>
+  <row>
+    <!-- Table: All Metrics -->
+    <panel>
+      <title>All Metrics</title>
+      <table>
+        <search>
+          <query>
+            index="main" 
+            | bin _time span=1d
+            | stats count as Total, count(eval(event="ERROR")) as Failures, exactperc95(responseTime) as P95RespTime by _time 
+            | eval "FailureRate" = round((Failures/Total)*100,2) 
+            | rename _time as Date 
+            | fieldformat Date = strftime(Date, "%Y-%m-%d") 
+            | table Date, Total, FailureRate, P95RespTime 
+            | sort -Date
+          </query>
+          <earliest>$time.earliest$</earliest>
+          <latest>$time.latest$</latest>
+        </search>
+      </table>
+    </panel>
+    <!-- Table: Timeline by Event Type -->
+    <panel>
+      <title>Timeline by Event Type</title>
+      <chart>
+        <search>
+          <query>
+            index=main
+            | timechart span=1d count by event
+          </query>
+          <earliest>$time.earliest$</earliest>
+          <latest>$time.latest$</latest>
+        </search>
+        <option name="charting.chart">line</option>
+        <option name="charting.drilldown">all</option>
+        <option name="refresh.display">progressbar</option>
+      </chart>
+    </panel>
+  </row>
+  <row>
+    <panel>
+      <title>Timeline by Latency</title>
+      <chart>
+        <search>
+          <query>
+            index=main
+            | timechart span=1h p95(responseTime)
+          </query>
+          <earliest>$time.earliest$</earliest>
+          <latest>$time.latest$</latest>
+        </search>
+        <option name="charting.chart">line</option>
+        <option name="charting.drilldown">all</option>
+        <option name="refresh.display">progressbar</option>
+      </chart>
+    </panel>
+  </row>
+</dashboard>
